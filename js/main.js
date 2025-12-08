@@ -8,8 +8,29 @@
 
     "use strict";
 
-    $(".loader").delay(1000).fadeOut("slow");
- 	$("#overlayer").delay(1000).fadeOut("slow");
+    //Overlay Effects
+    $(".loader").delay(2500).fadeOut("slow");
+ 	$("#overlayer").delay(2800).fadeOut("slow");
+
+    //video-lazyload
+    const $lazyVideo = $('.lazy-hero-video');
+
+    if ('IntersectionObserver' in window && $lazyVideo.length) {
+      const observer = new IntersectionObserver(function (entries, obs) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            const video = entry.target;
+            video.src = $(video).data('src');
+            video.load();
+            obs.unobserve(video);
+          }
+        });
+    });
+    observer.observe($lazyVideo[0]);
+    } else {
+      // Fallback if IntersectionObserver not supported
+      $lazyVideo.attr('src', $lazyVideo.data('src'));
+    }
 
     // Parallax Effect
     $(window).on('scroll', function() {
@@ -23,29 +44,40 @@
     });
     
 
-    // Window Resize Mobile Menu Fix
-    mobileNav();
-    
-
     // Menu elevator animation
-    $('a[href*=\\#]:not([href=\\#])').on('click', function() {
-        if (location.pathname.replace(/^\//,'') == this.pathname.replace(/^\//,'') && location.hostname == this.hostname) {
-            var target = $(this.hash);
-            target = target.length ? target : $('[name=' + this.hash.slice(1) +']');
-            if (target.length) {
-                var width = $(window).width();
-                if(width < 991) {
-                    $('.menu-trigger').removeClass('active');
-                    $('.header-area .nav').slideUp(200);	
-                }				
-                $('html,body').animate({
-                    scrollTop: (target.offset().top) - 130
-                }, 700);
-                return false;
-            }
+    $('.menu-trigger').on('click', function () {
+        $(this).toggleClass('active'); // animate the icon
+        $('.header-area .nav').slideToggle(500);
+        const $social = $('.header-area .social');
+        if ($social.is(':visible')) {
+            $social.slideUp(300);
+        } else {
+            $social.slideDown(300, function () {
+                $(this).css('display', 'flex'); // restore flex after slideDown
+            });
+        }
+        
+
+    });
+
+    // Auto-close menu when nav link is clicked (mobile only)
+    $('.header-area .nav li a').on('click', function () {
+        if ($(window).width() < 991) {
+            $('.header-area .nav').slideUp(500);
+            $('.header-area .social').slideUp(300);
+            $('.menu-trigger').removeClass('active');
         }
     });
 
+    // Remove styles on window resize (desktop)
+    $(window).on('resize', function () {
+        if ($(window).width() > 991) {
+            $('.header-area .nav').removeAttr('style');
+            $('.header-area .social').removeAttr('style');
+        }
+    });
+
+    //Smooth Scroll
     $(document).ready(function () {
         $(document).on("scroll", onScroll);
         
@@ -80,7 +112,7 @@
             var href = currLink.attr("href");
     
             // Skip if href is undefined or is an external link or a full page redirect
-            if (!href || href.startsWith("http") || href.startsWith("mailto:") || href.startsWith("/")) {
+            if (!href || href.startsWith("http") || href.startsWith("mailto:") || href.startsWith("tel:") || href.startsWith("/")) {
                 return; // skip this link
             }
     
@@ -98,50 +130,84 @@
     }
 
 
-    // Page loading animation
-    $(window).on('load', function() {
-        if($('.cover').length){
-            $('.cover').parallax({
-                imageSrc: $('.cover').data('image'),
-                zIndex: '1'
-            });
+    // About Item Flip Card
+    // Select all the flip buttons
+    var flipButtons = document.querySelectorAll (".flip-btn");
+
+    // Loop through each button and add a click event listener
+    flipButtons.forEach (function (flip_button) {
+    flip_button.addEventListener ("click", function () {
+        
+        // Find the parent item element
+        var item = flip_button.closest (".image-area");
+
+        // Find the front and back images
+        var front = item.querySelector (".front");
+        var back = item.querySelector (".back");
+
+        // Toggle the flip classes
+        front.classList.toggle ("flipped");
+        back.classList.toggle ("flipped");
+
+        // Use jQuery for text replacement
+        const $spanContainer = $(flip_button);
+        const $existingSpan = $spanContainer.find('span');
+
+        // If currently showing the back face
+        if (back.classList.contains('flipped')) {
+            const $typingSpan = $('<span></span>')
+            .addClass('typing-effect')
+            .text('Keerthana Chandrasekaran');
+
+            $existingSpan.replaceWith($typingSpan);
+
+        } else {
+            // When flipping back to front face (fish)
+            const $originalSpan = $('<span></span>')
+            .attr('id', 'btn-text')
+            .addClass('wiggle')
+            .text('The Person Behind the Pixels');
+
+            $existingSpan.replaceWith($originalSpan);
         }
-
-        $("#preloader").animate({
-            'opacity': '0'
-        }, 600, function(){
-            setTimeout(function(){
-                $("#preloader").css("visibility", "hidden").fadeOut();
-            }, 300);
-        });
+    });
     });
 
-
-    // Window Resize Mobile Menu Fix
-    $(window).on('resize', function() {
-        mobileNav();
-    });
-
-
-    // Window Resize Mobile Menu Fix
-    function mobileNav() {
-        var width = $(window).width();
-        $('.submenu').on('click', function() {
-            if(width < 992) {
-                $('.submenu ul').removeClass('active');
-                $(this).find('ul').toggleClass('active');
+    //Certifiacte slider
+    $('.certificate-slider').slick({
+        centerMode: true,
+        slidesToShow: 5,
+        infinity: true,
+        autoplay: true,
+        autoplaySpeed: 1000,
+        arrows: false,
+        responsive: [
+          {
+            breakpoint: 768,
+            settings: {
+              centerMode: true,
+              slidesToShow: 3
             }
-        });
-    }
+          },
+          {
+            breakpoint: 480,
+            settings: {
+              centerMode: true,
+              slidesToShow: 1
+            }
+          }
+        ]
+      });
 
     //testimonial slider
     $('.testimonial-slider').slick({
         centerMode: true,
-        centerPadding: '60px',
-        slidesToShow: 3,
+        
         prevArrow: `<i class="fas fa-chevron-left custom-arrow slick-prev"></i>`,
         nextArrow: `<i class="fas fa-chevron-right custom-arrow slick-next"></i>`,
         variableWidth: true,
+        autoplay: true,
+        autoplaySpeed: 2000,
         responsive: [
           {
             breakpoint: 768,
@@ -149,7 +215,7 @@
               arrows: false,
               centerMode: true,
               centerPadding: '40px',
-              slidesToShow: 3
+              slidesToShow: 1
             }
           },
           {
